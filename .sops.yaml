@@ -1,0 +1,5 @@
+creation_rules:
+# Public validation fixture. Its plaintext contains placeholders only and the
+# throwaway private identity was destroyed after encryption.
+  - path_regex: secrets/test\.yaml$
+    age: age1l4swveayx7d9nah60a7aq4dywmwkl8xt0jh4xa7qmspc7wg0adjs6n0ecu

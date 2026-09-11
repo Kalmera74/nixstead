@@ -1,0 +1,13 @@
+{
+  "extends": ["config:recommended", ":disableDependencyDashboard"],
+  "automerge": false,
+  "nix": {"enabled": true},
+  "lockFileMaintenance": {"enabled": true},
+  "customManagers": [{
+    "customType": "regex",
+    "managerFilePatterns": ["/modules/services/registry/.*\\.nix$/"],
+    "matchStrings": ["# renovate: datasource=(?<datasource>docker) depName=(?<depName>[^\\s]+)\\s+default = \"[^\"]+:(?<currentValue>[^:@\"]+)@(?<currentDigest>sha256:[a-f0-9]+)\""],
+    "versioningTemplate": "docker"
+  }],
+  "packageRules": [{"matchDatasources": ["docker"], "pinDigests": true}]
+}

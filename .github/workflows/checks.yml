@@ -1,0 +1,45 @@
+name: Checks
+
+on:
+  pull_request:
+  push:
+    branches: [master, main]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: checks-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  quality:
+    name: Formatting, ShellCheck and Nix evaluation
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: cachix/install-nix-action@v31
+      - name: Evaluate representative Nix outputs
+        run: |
+          # `nix flake check --no-build` still evaluates every service and VM
+          # check. The manual heavy workflow owns that exhaustive matrix.
+          nix eval --json path:.#nixosConfigurations \
+            --apply 'configurations: builtins.mapAttrs (_: configuration: configuration.config.system.build.toplevel.drvPath) configurations'
+          nix build --no-link --dry-run \
+            path:.#packages.x86_64-linux.nixstead \
+            path:.#packages.x86_64-linux.setup \
+            path:.#checks.x86_64-linux.public-module-api \
+            path:.#checks.x86_64-linux.python \
+            path:.#checks.x86_64-linux.service-docs \
+            path:.#checks.x86_64-linux.test-catalogue
+      - name: Check formatting
+        run: nix fmt -- --fail-on-change
+      - name: Run ShellCheck
+        run: |
+          nix develop --command bash -c '
+            set -euo pipefail
+            while IFS= read -r -d "" script; do
+              shellcheck --external-sources "$script"
+            done < <(git ls-files -z --cached --others --exclude-standard "*.sh")
+          '

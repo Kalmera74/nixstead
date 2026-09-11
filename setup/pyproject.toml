@@ -1,0 +1,17 @@
+[build-system]
+requires = ["setuptools"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "nixstead-setup"
+version = "0.1.0"
+description = "Interactive NixOS host setup wizard"
+requires-python = ">=3.11"
+dependencies = ["textual>=8.2,<9"]
+
+[project.scripts]
+nixstead-setup = "setup.app:main"
+
+[tool.setuptools]
+packages = ["setup", "setup.features"]
+package-dir = {setup = ".", "setup.features" = "features"}

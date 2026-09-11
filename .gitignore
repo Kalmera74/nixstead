@@ -1,0 +1,12 @@
+# Legacy plaintext secret files and decrypted scratch files.
+/secrets/*.nix
+/secrets/*.dec.yaml
+/secrets/*.decrypted.yaml
+hardware-configuration.local.nix
+hosts/setup-local.nix
+/Configs/
+__pycache__/
+*.py[cod]
+
+# Per-document synchronization locks contain no credentials.
+*.yaml.nixstead.lock

@@ -1,0 +1,133 @@
+name: Heavy Checks
+
+on:
+  workflow_dispatch:
+    inputs:
+      scope:
+        description: Runtime scope to execute (non-runtime checks always run)
+        required: true
+        default: all
+        type: choice
+        options:
+          - all
+          - canaries
+          - service
+      service:
+        description: Registry service id when scope is service
+        required: false
+        type: string
+
+permissions:
+  contents: read
+
+concurrency:
+  group: heavy-checks-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  quality-x86:
+    name: x86 configuration, Python and catalogue checks
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: cachix/install-nix-action@v31
+      - name: Run x86 configuration, Python and catalogue checks
+        run: |
+          nix build --no-link -L \
+            path:.#checks.x86_64-linux.public-module-api \
+            path:.#checks.x86_64-linux.service-config \
+            path:.#checks.x86_64-linux.service-docs \
+            path:.#checks.x86_64-linux.test-catalogue \
+            path:.#checks.x86_64-linux.python
+      - name: Run credential checks
+        run: nix develop --command bash tests/test-service-credentials.sh
+      - name: Run source checks
+        run: nix develop --command bash scripts/check-source.sh
+
+  configuration-arm:
+    name: ARM configuration
+    runs-on: ubuntu-24.04-arm
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: cachix/install-nix-action@v31
+      - name: Run ARM configuration checks
+        run: |
+          nix build --no-link -L \
+            path:.#checks.aarch64-linux.public-module-api \
+            path:.#checks.aarch64-linux.service-config
+
+  runtime-plan:
+    name: Plan heavy runtime shards
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    outputs:
+      matrix: ${{ steps.select.outputs.matrix }}
+      has-checks: ${{ steps.select.outputs.has-checks }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: cachix/install-nix-action@v31
+      - name: Select and shard service suites
+        id: select
+        env:
+          REQUESTED_SCOPE: ${{ inputs.scope || 'all' }}
+          REQUESTED_SERVICE: ${{ inputs.service }}
+        run: |
+          catalogue="$(mktemp)"
+          nix eval --json path:.#lib.testCatalogue > "$catalogue"
+          case "$REQUESTED_SCOPE" in
+            all)
+              matrix=$(python tests/select_checks.py "$catalogue" --all --shards 8)
+              ;;
+            canaries)
+              matrix=$(python tests/select_checks.py "$catalogue" --canaries --shards 4)
+              ;;
+            service)
+              if [[ -z "$REQUESTED_SERVICE" ]]; then
+                echo "The service input is required when scope=service" >&2
+                exit 2
+              fi
+              matrix=$(python tests/select_checks.py "$catalogue" --service "$REQUESTED_SERVICE" --shards 2)
+              ;;
+            *)
+              echo "Unknown runtime scope: $REQUESTED_SCOPE" >&2
+              exit 2
+              ;;
+          esac
+          echo "matrix=$matrix" >> "$GITHUB_OUTPUT"
+          echo "has-checks=$(jq '.include | length > 0' <<< "$matrix")" >> "$GITHUB_OUTPUT"
+          echo "$matrix" | jq .
+
+  runtime:
+    name: Runtime shard ${{ matrix.shard }}
+    needs: runtime-plan
+    if: needs.runtime-plan.outputs.has-checks == 'true'
+    timeout-minutes: 180
+    strategy:
+      fail-fast: false
+      max-parallel: 8
+      matrix: ${{ fromJSON(needs.runtime-plan.outputs.matrix) }}
+    runs-on: ubuntu-24.04
+    env:
+      CHECKS_JSON: ${{ toJSON(matrix.checks) }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: cachix/install-nix-action@v31
+      - name: Require hardware virtualization
+        run: test -c /dev/kvm
+      - name: Run service checks sequentially with one shared Nix store
+        run: |
+          mapfile -t checks < <(jq -r '.[]' <<< "$CHECKS_JSON")
+          installables=()
+          for check in "${checks[@]}"; do
+            installables+=("path:.#checks.x86_64-linux.$check")
+          done
+          nix build --no-link -L --keep-going --max-jobs 1 "${installables[@]}" 2>&1 | tee runtime-shard.log
+      - name: Upload failure log
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: runtime-shard-${{ matrix.shard }}-log
+          path: runtime-shard.log
+          retention-days: 14

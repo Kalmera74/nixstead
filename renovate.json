@@ -1,0 +1,44 @@
+{
+  "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+  "extends": [
+    "config:recommended",
+    "docker:disableMajor"
+  ],
+  "dependencyDashboard": true,
+  "automerge": false,
+  "prConcurrentLimit": 5,
+  "schedule": [
+    "before 6am on monday"
+  ],
+  "labels": [
+    "dependencies",
+    "containers"
+  ],
+  "customManagers": [
+    {
+      "customType": "regex",
+      "description": "Update digest-pinned OCI image options in Nix modules",
+      "managerFilePatterns": [
+        "/^modules\\/services\\/.*\\.nix$/"
+      ],
+      "matchStrings": [
+        "# renovate: datasource=(?<datasource>\\S+) depName=(?<depName>\\S+)\\s+[A-Za-z0-9_-]+\\s*=\\s*\"[^\"\\s]+:(?<currentValue>[^\"@\\s]+)@(?<currentDigest>sha256:[a-f0-9]{64})\";"
+      ],
+      "versioningTemplate": "docker"
+    }
+  ],
+  "packageRules": [
+    {
+      "description": "Keep OCI changes reviewable and pinned",
+      "matchManagers": [
+        "custom.regex"
+      ],
+      "matchDatasources": [
+        "docker"
+      ],
+      "pinDigests": true,
+      "minimumReleaseAge": "3 days",
+      "automerge": false
+    }
+  ]
+}
