@@ -16,7 +16,8 @@
     port="$2"
     bind_address="$3"
 
-    if [[ ! -e "$network_config" ]]; then
+    # An empty file needs the same initialization as a missing configuration.
+    if [[ ! -s "$network_config" ]]; then
       umask 077
       ${pkgs.coreutils}/bin/mkdir -p "$(${pkgs.coreutils}/bin/dirname "$network_config")"
       ${pkgs.coreutils}/bin/printf '%s\n' \
