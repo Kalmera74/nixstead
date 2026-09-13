@@ -133,13 +133,17 @@ python tests/select_checks.py /tmp/nixstead-test-catalogue.json --all --shards 8
 python tests/select_checks.py /tmp/nixstead-test-catalogue.json --all --system aarch64-linux
 ```
 
-PRs and main-branch pushes evaluate the discovered hosts and dry-run the main
-packages plus representative public API, Python, catalogue and documentation
-derivations, then run formatting and ShellCheck. They deliberately avoid
+Pushes to `dev` and `master`, and PRs targeting either branch, run formatting,
+source/workflow lint, the packaged Python tests and catalogue/document drift
+checks. They evaluate the `ci-base`, `ci-arr`, `ci-media` and `ci-template`
+configuration derivations individually, then the main packages and discovered
+hosts. The final `CI passed` status requires all automatic jobs to succeed.
+See [CI and promotion](../docs/ci-cd.md) for the required scope and branch setup.
+Automatic CI deliberately avoids the full public API check and
 `nix flake check --no-build`, which still evaluates every service and runtime
-VM derivation. Configuration builds,
-catalogue/document drift, Python, credential, source and runtime checks run
-only in the manually dispatched heavy workflow. Manual dispatch can run all
+VM derivation. Full API/configuration, credential and runtime checks run in the
+manually dispatched heavy workflow, which also repeats the shared Python and
+documentation checks. Manual dispatch can run all
 runtime checks, the canaries or one registry service. The heavy workflow packs
 the 53 unique executions into at most 8 weighted runner jobs; checks run
 sequentially inside each runner and reuse its Nix store. Checks backed by the
