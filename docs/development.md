@@ -3,6 +3,10 @@
 This guide is for contributors changing the repository itself. Read the root
 `AGENTS.md` for the current coding-agent conventions as well.
 
+Develop on `dev`, then promote a ready batch through a pull request to protected
+`master` with auto-merge enabled. See [CI and promotion](ci-cd.md) for the required
+checks, one-time GitHub settings and branch synchronization after each merge.
+
 ## Repository principles
 
 - Keep machine facts in host configuration.

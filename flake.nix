@@ -169,6 +169,9 @@
     devShells = lib.genAttrs supportedSystems (system: let
       pkgs = import nixpkgs {inherit system;};
     in {
+      ci = pkgs.mkShellNoCC {
+        packages = with pkgs; [ruff shellcheck actionlint];
+      };
       default = pkgs.mkShell {
         packages = with pkgs; [alejandra ruff shfmt shellcheck treefmt git jq sops age rsync borgbackup sqlite (python3.withPackages (ps: [ps.textual ps.pyyaml ps.configobj]))];
       };
@@ -270,6 +273,7 @@
           touch $out
         '';
       }
+      // (import ./tests/ci-evaluation.nix {inherit nixpkgs pkgs publicModules system;})
       // (import ./tests {inherit nixpkgs pkgs publicModules system;}));
   };
 }

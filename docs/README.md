@@ -42,6 +42,8 @@ Start with the installation path that matches how you want to use the project.
   template, and external consumer examples.
 - [Development](development.md) — repository conventions, adding hosts and
   services, tests, and documentation expectations.
+- [CI and promotion](ci-cd.md) — lightweight checks, GitHub branch protection,
+  auto-merge from `dev` to `master`, and manual deployment.
 
 Every major source directory also includes a short local README. Those files
 answer “what belongs here?” while these guides explain cross-cutting workflows.

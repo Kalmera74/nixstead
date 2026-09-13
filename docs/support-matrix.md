@@ -1,9 +1,10 @@
 # Support and verification
 
 Support levels describe specific automated evidence, not a guarantee for every
-host, filesystem, package override or external provider. CI evaluates the public
-module API on x86_64-linux and aarch64-linux. Runtime groups currently run on
-x86_64-linux; ARM runtime behavior is not claimed.
+host, filesystem, package override or external provider. Automatic CI evaluates
+representative configurations on x86_64-linux. The manual heavy workflow checks
+the full public module API on x86_64-linux and aarch64-linux. Runtime groups
+currently run on x86_64-linux; ARM runtime behavior is not claimed.
 
 The [service coverage catalogue](generated/test-coverage.md) lists every registry
 entry and its independently runnable checks. All 66 entries now have dedicated

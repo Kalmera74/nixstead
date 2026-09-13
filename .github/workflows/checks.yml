@@ -2,44 +2,119 @@ name: Checks
 
 on:
   pull_request:
+    branches: [dev, master]
   push:
-    branches: [master, main]
+    branches: [dev, master]
+  workflow_dispatch:
 
 permissions:
   contents: read
 
 concurrency:
-  group: checks-${{ github.ref }}
+  # Branch checks and PR merge checks validate different revisions.
+  group: checks-${{ github.event_name }}-${{ github.ref }}
   cancel-in-progress: true
 
+defaults:
+  run:
+    shell: bash
+
 jobs:
-  quality:
-    name: Formatting, ShellCheck and Nix evaluation
+  lint:
+    name: Formatting and lint
     runs-on: ubuntu-24.04
-    timeout-minutes: 30
+    timeout-minutes: 15
     steps:
       - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
       - uses: cachix/install-nix-action@v31
-      - name: Evaluate representative Nix outputs
+        with:
+          enable_kvm: false
+          extra_nix_config: |
+            max-jobs = 2
+            cores = 2
+            allow-import-from-derivation = false
+      - name: Check formatting
+        run: nix fmt -- --fail-on-change
+      - name: Check Python, shell scripts and workflows
         run: |
-          # `nix flake check --no-build` still evaluates every service and VM
-          # check. The manual heavy workflow owns that exhaustive matrix.
-          nix eval --json path:.#nixosConfigurations \
-            --apply 'configurations: builtins.mapAttrs (_: configuration: configuration.config.system.build.toplevel.drvPath) configurations'
-          nix build --no-link --dry-run \
-            path:.#packages.x86_64-linux.nixstead \
-            path:.#packages.x86_64-linux.setup \
-            path:.#checks.x86_64-linux.public-module-api \
+          nix develop path:.#ci --command bash scripts/check-source.sh
+          nix develop path:.#ci --command actionlint
+      - name: Report disk usage
+        if: always()
+        run: df -h / /nix
+
+  tests:
+    name: Python and generated documentation
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: cachix/install-nix-action@v31
+        with:
+          enable_kvm: false
+          extra_nix_config: |
+            max-jobs = 2
+            cores = 2
+            allow-import-from-derivation = false
+      - name: Execute Python and documentation checks
+        run: |
+          nix build --no-link -L \
             path:.#checks.x86_64-linux.python \
             path:.#checks.x86_64-linux.service-docs \
             path:.#checks.x86_64-linux.test-catalogue
-      - name: Check formatting
-        run: nix fmt -- --fail-on-change
-      - name: Run ShellCheck
+      - name: Report disk usage
+        if: always()
+        run: df -h / /nix
+
+  evaluation:
+    name: Nix evaluation
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: cachix/install-nix-action@v31
+        with:
+          enable_kvm: false
+          extra_nix_config: |
+            max-jobs = 2
+            cores = 2
+            allow-import-from-derivation = false
+      - name: Evaluate representative Nix outputs
         run: |
-          nix develop --command bash -c '
-            set -euo pipefail
-            while IFS= read -r -d "" script; do
-              shellcheck --external-sources "$script"
-            done < <(git ls-files -z --cached --others --exclude-standard "*.sh")
-          '
+          # Separate processes release evaluation memory between configurations.
+          # Full API/service/VM evaluation belongs to the manual heavy workflow.
+          for check in ci-base ci-arr ci-media ci-template; do
+            nix eval --raw "path:.#checks.x86_64-linux.$check.drvPath"
+          done
+          for package in nixstead setup; do
+            nix eval --raw "path:.#packages.x86_64-linux.$package.drvPath"
+          done
+      - name: Evaluate repository hosts individually
+        run: |
+          hosts="$(nix eval --json path:.#nixosConfigurations --apply builtins.attrNames)"
+          while IFS= read -r host; do
+            nix eval --raw "path:.#nixosConfigurations.\"$host\".config.system.build.toplevel.drvPath"
+          done < <(jq -r '.[]' <<< "$hosts")
+      - name: Report disk usage
+        if: always()
+        run: df -h / /nix
+
+  required:
+    name: CI passed
+    if: ${{ always() }}
+    needs: [lint, tests, evaluation]
+    runs-on: ubuntu-24.04
+    timeout-minutes: 2
+    permissions: {}
+    steps:
+      - name: Require every check to succeed
+        env:
+          JOB_RESULTS: ${{ toJSON(needs) }}
+        run: |
+          jq -e 'length > 0 and all(.[]; .result == "success")' <<< "$JOB_RESULTS"
