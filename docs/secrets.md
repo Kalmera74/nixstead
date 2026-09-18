@@ -47,8 +47,11 @@ Only public recipients enter the repository. Back up the admin age identity in
 a secure password manager or offline encrypted backup. The host keeps its
 existing SSH private key root-only.
 
-Nixstead sets `SOPS_AGE_KEY_FILE` to this common location for the managed
-user. Before the first activation, manual setup can export it explicitly:
+The setup wizard passes its selected identity to credential generation,
+decryption, and preflight before the first activation. Nixstead also sets
+`SOPS_AGE_KEY_FILE` to this common location for the managed user's login
+sessions. When running the individual helpers manually before activation,
+export it explicitly:
 
 ```bash
 export SOPS_AGE_KEY_FILE="$HOME/.local/share/nixstead/sops-age-key.txt"

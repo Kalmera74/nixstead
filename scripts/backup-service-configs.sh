@@ -24,6 +24,8 @@ Usage: sudo --preserve-env=BORG_PASSPHRASE,BORG_PASSCOMMAND nixstead backup crea
 Creates an encrypted Borg archive and refreshes the latest recovery copy
 for services with a backup policy in the central service registry.
 Services that are running are paused while the consistent snapshot is staged.
+Archives and retention are scoped to the selected host. Legacy archives without
+a host prefix are retained for explicit restore and are never pruned here.
 
 Set BORG_PASSPHRASE or BORG_PASSCOMMAND before creating or opening the Borg
 repository. New repositories use repokey-blake2 encryption.
@@ -47,6 +49,11 @@ if [[ $# -gt 0 ]]; then
   usage >&2
   exit 1
 fi
+
+# shellcheck source=scripts/lib/nixstead.sh
+# shellcheck disable=SC1091
+source "${NIXSTEAD_LIB:-${SCRIPT_DIR}/lib/nixstead.sh}"
+ARCHIVE_PREFIX="$(nixstead_backup_archive_prefix)"
 
 PRUNE_ARGS=(--keep-daily 7 --keep-weekly 4 --keep-monthly 6)
 RETENTION_DESCRIPTION="7 daily, 4 weekly, and 6 monthly archives"
@@ -102,9 +109,6 @@ if [[ -n "${NIXSTEAD_REGISTRY_FILE:-}" ]]; then
   registry_json="$(<"${NIXSTEAD_REGISTRY_FILE}")"
 else
   require_cmd nix
-  # shellcheck source=scripts/lib/nixstead.sh
-  # shellcheck disable=SC1091
-  source "${NIXSTEAD_LIB:-${REPO_ROOT}/scripts/lib/nixstead.sh}"
   registry_json="$(nixstead_config_json nixstead.serviceRegistry)"
 fi
 SERVICES=()
@@ -331,17 +335,18 @@ done
 restart_stopped_services
 
 TIMESTAMP="$(date +%Y-%m-%d_%H-%M-%S)"
+ARCHIVE_NAME="${ARCHIVE_PREFIX}${TIMESTAMP}"
 (
   cd "${STAGING_DIR}"
   borg create \
     --stats \
     --compression lz4 \
-    "${BORG_REPO}::service-data-${TIMESTAMP}" \
+    "${BORG_REPO}::${ARCHIVE_NAME}" \
     "${STAGED_SERVICES[@]}" database-dumps
 )
 
 if [[ "${VERIFY_BACKUP}" == "true" ]]; then
-  borg check --verify-data --glob-archives "service-data-${TIMESTAMP}" "${BORG_REPO}"
+  borg check --verify-data --glob-archives "${ARCHIVE_NAME}" "${BORG_REPO}"
 elif [[ "${VERIFY_BACKUP}" != "false" ]]; then
   echo "Invalid NIXSTEAD_BACKUP_VERIFY: ${VERIFY_BACKUP} (expected true or false)" >&2
   exit 1
@@ -349,7 +354,7 @@ fi
 
 borg prune \
   --list \
-  --glob-archives 'service-data-*' \
+  --glob-archives "${ARCHIVE_PREFIX}*" \
   "${PRUNE_ARGS[@]}" \
   "${BORG_REPO}"
 borg compact "${BORG_REPO}"
@@ -373,6 +378,7 @@ fi
 
 echo "Backup complete."
 echo "Borg repo: ${BORG_REPO}"
+echo "Archive: ${ARCHIVE_NAME}"
 echo "Latest copy: ${LATEST_DIR}"
 echo "Retention: ${RETENTION_DESCRIPTION}."
 echo "Scope: ${BACKUP_SCOPE}."

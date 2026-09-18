@@ -20,11 +20,13 @@ MODE = ROOT / "mode"
 JOURNAL = Path("/var/lib/nixstead-pihole-dns-sync/managed-domains.json")
 INITIAL_HOSTS = [
     "203.0.113.9 manual.example.net",
+    "203.0.113.10 printer printer.example.test",
     "198.51.100.1 dashboard.example.test",
     "198.51.100.2 obsolete.example.test",
 ]
 FINAL_HOSTS = [
     "203.0.113.9 manual.example.net",
+    "203.0.113.10 printer printer.example.test",
     "192.0.2.10 dashboard.example.test",
     "192.0.2.10 pihole.example.test",
 ]

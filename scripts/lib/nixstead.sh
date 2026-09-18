@@ -15,6 +15,12 @@ nixstead_require_host() {
   fi
 }
 
+nixstead_backup_archive_prefix() {
+  nixstead_require_host || return 1
+  # A dot cannot occur in a validated host name, so lab never matches lab-prod.
+  printf 'service-data-%s.' "${HOST_NAME}"
+}
+
 nixstead_config_validate_context() {
   nixstead_require_host || return 1
   if [[ -z "${REPO_ROOT:-}" || ! -f "${REPO_ROOT}/flake.nix" ]]; then

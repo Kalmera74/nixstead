@@ -171,7 +171,8 @@ The backup workflow:
 5. stages application state and all registry-declared paths;
 6. restarts services before Borg processing;
 7. creates and verifies an encrypted Borg archive;
-8. prunes to the configured retention policy (7 daily, 4 weekly, and 6 monthly by default);
+8. prunes this host's archives to the configured retention policy (7 daily,
+   4 weekly, and 6 monthly by default);
 9. compacts the repository; and
 10. refreshes a `service-configs-latest` recovery copy.
 
@@ -202,6 +203,16 @@ sudo --preserve-env=BORG_PASSPHRASE \
 
 New repositories use `repokey-blake2` encryption. The script refuses an
 existing unencrypted repository.
+
+New archives are named `service-data-<host>.YYYY-MM-DD_HH-MM-SS`. Pruning and
+automatic `backup verify` selection match only the selected host's prefix.
+Use distinct configuration names for machines that share a Borg repository.
+Upgrade every writer before relying on this isolation; older versions prune
+the shared `service-data-*` prefix.
+Legacy `service-data-YYYY-MM-DD_HH-MM-SS` archives remain available for explicit
+verification and restore; they are never selected or pruned automatically
+because their owning host cannot be established from the name. Review and
+remove those legacy archives manually when they are no longer needed.
 
 Use an off-machine target instead of the repository-local fallback:
 
@@ -238,8 +249,8 @@ recovery copy default to `/var/lib/nixstead-backups`; override
 `nixstead.backups.stateDirectory` when a different persistent location is required.
 
 Set `nixstead.backups.keepLast = 2` to retain only the two newest service
-archives, including manual extra runs. This replaces all daily/weekly/monthly
-retention rules. Repository scripts accept `NIXSTEAD_BACKUP_KEEP_LAST=2` for the
+archives for this host. This replaces all daily/weekly/monthly retention rules.
+Repository scripts accept `NIXSTEAD_BACKUP_KEEP_LAST=2` for the
 same behavior. With verification enabled, pruning happens after the new archive
 passes verification.
 
@@ -264,7 +275,7 @@ sudo nix run path:.#nixstead -- --host <host> backup restore latest --apply
 
 sudo --preserve-env=BORG_PASSPHRASE \
   nixstead --host <host> backup restore \
-  borg service-data-YYYY-MM-DD_HH-MM-SS --apply --restore-databases
+  borg 'service-data-<host>.YYYY-MM-DD_HH-MM-SS' --apply --restore-databases
 ```
 
 The restore script evaluates registry mappings, stops each affected running

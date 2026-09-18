@@ -52,6 +52,8 @@ class HostSelectionTests(unittest.TestCase):
     def test_missing_host_fails_before_external_commands_or_secret_writes(self):
         for name, args in (
             ("healthcheck.sh", []),
+            ("backup-service-configs.sh", []),
+            ("test-service-backup-restore.sh", []),
             ("dev-healthcheck.sh", []),
             ("check-secret-store-leaks.sh", []),
             ("check-homepage-secrets.sh", []),

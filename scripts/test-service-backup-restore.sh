@@ -24,7 +24,8 @@ artifacts. Elasticsearch snapshots receive manifest and payload validation;
 native RDB files use the selected Redis package's checker. Required files are
 relative to the primary archive path; additional archive directories must exist.
 It does not import databases or test application recovery. No live path is
-modified. The newest archive is selected by default.
+modified. The newest archive for NIXSTEAD_HOST is selected by default.
+Supply an archive name explicitly to verify a legacy archive without a host prefix.
 
 Environment:
   NIXSTEAD_BACKUP_REPOSITORY  Local or remote Borg repository
@@ -48,6 +49,13 @@ if [[ $# -eq 1 ]]; then
   esac
 fi
 
+# shellcheck source=scripts/lib/nixstead.sh
+# shellcheck disable=SC1091
+source "${NIXSTEAD_LIB:-${SCRIPT_DIR}/lib/nixstead.sh}"
+if [[ -z "${ARCHIVE_NAME}" ]]; then
+  ARCHIVE_PREFIX="$(nixstead_backup_archive_prefix)"
+fi
+
 for command_name in borg find grep jq mktemp rm tail; do
   command -v "${command_name}" >/dev/null 2>&1 || {
     printf 'Error: required command not found: %s\n' "${command_name}" >&2
@@ -66,17 +74,14 @@ else
     printf 'Error: required command not found: nix\n' >&2
     exit 1
   }
-  # shellcheck source=scripts/lib/nixstead.sh
-  # shellcheck disable=SC1091
-  source "${NIXSTEAD_LIB:-${REPO_ROOT}/scripts/lib/nixstead.sh}"
   registry_json="$(nixstead_config_json nixstead.serviceRegistry)"
 fi
 
 if [[ -z "${ARCHIVE_NAME}" ]]; then
-  ARCHIVE_NAME="$(borg list --short --last 1 "${BORG_REPO}" | tail -n 1)"
+  ARCHIVE_NAME="$(borg list --short --glob-archives "${ARCHIVE_PREFIX}*" --last 1 "${BORG_REPO}" | tail -n 1)"
 fi
 [[ -n "${ARCHIVE_NAME}" ]] || {
-  printf 'Error: no Borg archive is available in %s\n' "${BORG_REPO}" >&2
+  printf 'Error: no service backup for host %s is available in %s; specify an archive name explicitly for legacy backups.\n' "${HOST_NAME}" "${BORG_REPO}" >&2
   exit 1
 }
 
