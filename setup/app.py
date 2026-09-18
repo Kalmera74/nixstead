@@ -240,10 +240,26 @@ def selected_secrets(host: HostConfig, registry: Registry) -> list[str]:
     return sorted(values)
 
 
+def host_environment(host: HostConfig) -> dict[str, str]:
+    env = dict(
+        os.environ,
+        NIXSTEAD_HOST=host.target_name or host.host_name,
+        NIXSTEAD_REPOSITORY_ROOT=str(host.repo_root),
+        NIXSTEAD_SECRETS_DIR=str(host.secrets_dir),
+    )
+    # New hosts need this identity before activation installs the login setting.
+    # Existing targets keep the caller's configured SOPS identity.
+    if host.user_sops_age_key_file is not None:
+        env["SOPS_AGE_KEY_FILE"] = str(host.user_sops_age_key_file)
+    return env
+
+
 def offer_secrets(host: HostConfig, registry: Registry, framework_root: Path) -> None:
     secrets = selected_secrets(host, registry)
     if not secrets:
         return
+    if host.user_sops_age_key_file is None:
+        raise SetupError("the administrator age identity path has not been selected")
     ensure_owned_directory(host.user_files_directory, host.user_uid)
     sops_helper = framework_script(
         framework_root, "NIXSTEAD_SOPS_HELPER", "configure-sops-host.sh"
@@ -253,12 +269,7 @@ def offer_secrets(host: HostConfig, registry: Registry, framework_root: Path) ->
         "NIXSTEAD_CREDENTIAL_HELPER",
         "generate-credential-files.sh",
     )
-    env = dict(
-        os.environ,
-        NIXSTEAD_HOST=host.host_name,
-        NIXSTEAD_REPOSITORY_ROOT=str(host.repo_root),
-        NIXSTEAD_SECRETS_DIR=str(host.secrets_dir),
-    )
+    env = host_environment(host)
     run(
         [
             str(sops_helper),
@@ -275,6 +286,7 @@ def offer_secrets(host: HostConfig, registry: Registry, framework_root: Path) ->
             run(
                 ["sops", "decrypt", "--extract", f'["{name}"]', str(encrypted)],
                 capture=True,
+                env=env,
             )
         except subprocess.CalledProcessError:
             missing.append(name)
@@ -313,11 +325,7 @@ def healthcheck(host: HostConfig, skip: bool, framework_root: Path) -> str:
         framework_root, "NIXSTEAD_HEALTHCHECK_SCRIPT", "healthcheck.sh"
     )
     print(f"==> Running pre-switch healthcheck for {host.target_name}")
-    env = dict(
-        os.environ,
-        NIXSTEAD_REPOSITORY_ROOT=str(host.repo_root),
-        NIXSTEAD_SECRETS_DIR=str(host.secrets_dir),
-    )
+    env = host_environment(host)
     result = run(
         [str(script), host.target_name, str(host.secrets_dir)], check=False, env=env
     )

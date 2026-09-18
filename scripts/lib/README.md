@@ -23,6 +23,8 @@ values, attribute names, applied transformations, or boolean enabled state.
 `nixstead_require_host` validates an explicit host before selecting a secrets
 file. `nixstead_config_validate_context` also checks the flake directory; lookup
 helpers call it automatically. Neither helper chooses a host implicitly.
+`nixstead_backup_archive_prefix` returns a validated host's archive prefix for
+backup creation, retention, and automatic verification selection.
 
 Keep generic lookup behavior here. Service lists and metadata should come from
 `nixstead.serviceRegistry`, not from hardcoded library tables.

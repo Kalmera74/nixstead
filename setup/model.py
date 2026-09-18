@@ -75,7 +75,7 @@ class HostConfig:
     program_flags: Dict[str, bool] = field(default_factory=dict)
     user_generated_files_directory: str = ".local/share/nixstead"
     user_files_directory: Path = Path()
-    user_sops_age_key_file: Path = Path()
+    user_sops_age_key_file: Path | None = None
     user_groups: Dict[str, bool] = field(default_factory=dict)
     ssh: SshConfig = field(default_factory=SshConfig)
     nas: NasConfig = field(default_factory=NasConfig)

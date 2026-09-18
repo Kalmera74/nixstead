@@ -183,7 +183,8 @@ clearly reports that the private key has no passphrase.
 The same directory holds `sops-age-key.txt` and the public Nginx CA certificate
 when those features are selected. The generated host records the relative path
 as `nixstead.host.user.generatedFilesDirectory` and exports `SOPS_AGE_KEY_FILE` for
-login sessions.
+login sessions. The wizard also passes that identity to its credential and
+preflight commands immediately, without requiring activation or a new login.
 When no key is selected, password authentication is enabled automatically. Root
 SSH login defaults off in every mode.
 

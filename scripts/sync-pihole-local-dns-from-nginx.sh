@@ -467,7 +467,7 @@ if [[ "${APPLY}" == true && $((adds + updates + deletes)) -gt 0 ]]; then
         [
           $existing[]
           | . as $record
-          | (capture("^\\s*(?<ip>\\S+)\\s+(?<domain>\\S+)\\s*$")?) as $parsed
+          | ((capture("^\\s*(?<ip>\\S+)\\s+(?<domain>\\S+)\\s*$")?) // null) as $parsed
           | select(
               $parsed == null
               or (

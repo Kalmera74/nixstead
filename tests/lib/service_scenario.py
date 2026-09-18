@@ -25,6 +25,7 @@ class ServiceScenario:
         self.erase = erase
         self.before_backup = before_backup
         self.environment = (
+            "NIXSTEAD_HOST=service-suite "
             "NIXSTEAD_REGISTRY_FILE=/etc/backup-registry.json "
             "NIXSTEAD_BACKUP_STATE_DIR=/var/lib/test-backups "
             "BORG_PASSPHRASE=disposable-service-suite"
