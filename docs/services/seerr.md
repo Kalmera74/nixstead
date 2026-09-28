@@ -31,8 +31,10 @@ Inspect `seerr.service` with `systemctl status seerr` and `journalctl -u seerr`.
 
 ## Canonical state and backups
 
-The module explicitly selects `services.seerr.stateRevision = 1`, independently
-of the host's existing `system.stateVersion`. The default configuration path is
+The module preserves the revision 1 state layout independently of the host's
+existing `system.stateVersion`. On NixOS 26.05, explicit `configDir` and systemd
+`StateDirectory` settings select that layout; when the upstream module exposes
+`services.seerr.stateRevision`, Nixstead also sets it to 1. The default configuration path is
 `/var/lib/seerr`. `nixstead.services.media.seerr.paths.configDir` supplies a typed
 default; an explicit native `services.seerr.configDir` override becomes the
 effective path used by systemd and backups. Paths must be normalized below

@@ -30,18 +30,19 @@ on the host with `sudo -u paperless paperless-manage createsuperuser`, then open
 `https://paperless.home.arpa`. Create the optional Homepage API token from the
 user profile. Inspect `paperless-web.service` and `paperless-consumer.service`.
 
-The native `paperless-secret-key.service` owns the application secret. It
-generates `nixos-paperless-secret-key.env` in the effective data directory and
-reuses a legacy value-only key on the first upgrade. Nixstead no longer generates
-a second key during web startup. To supply a key explicitly, use a
-service-readable runtime `services.paperless.environmentFile`, such as an SOPS
-template. The manual `paperless-secret` helper only preseeds the legacy file
-before first startup and refuses once an active environment file exists.
+On the stable baseline, the native web startup script owns the application
+secret. It creates and reuses the value-only `nixos-paperless-secret-key` file
+in the effective data directory. Nixstead does not add a second generator.
+The manual `paperless-secret` helper can preseed that file before first startup.
+It refuses when a `nixos-paperless-secret-key.env` file from the newer unstable
+module exists: moving such state back to stable requires provisioning the same
+key in the value-only file before startup. There is no automatic reverse
+migration. Stable's native startup script sets `PAPERLESS_SECRET_KEY` from that
+file, so an `environmentFile` cannot override the key.
 When using the configured destination, run it as root or the configured
 Paperless account; the helper assigns the file to that account with mode 0600.
 An explicit output path creates a caller-owned export for manual provisioning.
-Preseed values allow letters, digits, underscores and hyphens so the native
-legacy conversion preserves them safely; use `environmentFile` for other values.
+Preseed values allow letters, digits, underscores and hyphens.
 
 Backups include the effective data directory plus separate document and inbox
 directories. Paths already inside the data directory are covered by that

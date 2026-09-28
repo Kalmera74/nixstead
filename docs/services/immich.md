@@ -5,6 +5,11 @@ server and machine-learning units, creates a local PostgreSQL database, and
 uses a dedicated `immich` account plus the media group for the media tree.
 It does not require `nixstead.host.user.enable`.
 
+The NixOS service module stays on stable. The application and its matching
+machine-learning package are explicitly selected from the locked unstable input
+because the Immich 2.x package in NixOS 26.05 is marked insecure. This selection
+does not change the system or PostgreSQL package set.
+
 ## Enable and configure
 
 ```nix

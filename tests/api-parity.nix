@@ -47,6 +47,17 @@
   templateFollowsNixpkgs =
     lib.hasInfix ''inputs.nixpkgs.follows = "nixpkgs";''
     (builtins.readFile templateFlake);
+  templateUsesStableNixpkgs =
+    lib.hasInfix ''nixpkgs.url = "github:NixOS/nixpkgs/nixos-26.05";''
+    (builtins.readFile templateFlake);
+  corePackageSources = let
+    evaluated = mkSystem [publicModules.default publicModules.program-core];
+    packages = evaluated.config.environment.systemPackages;
+  in
+    evaluated.config.system.nixos.release
+    == "26.05"
+    && lib.elem evaluated._module.args.pkgsUnstable.herdr packages
+    && lib.all (package: lib.elem package packages) [evaluated.pkgs.git evaluated.pkgs.neovim];
   templateEnablesZsh =
     (mkSystem [publicModules.default templateConfiguration]).config.programs.zsh.enable;
   arrDefinesMediaGroup = let
@@ -505,24 +516,24 @@
   in
     evaluated.services.ollama.port
     == resolved.ollama.settings.port
-    && evaluated.services.ollama.modelsDir == evaluated.nixstead.services.localai.ollama.paths.modelsDir
-    && evaluated.services.llama-cpp.settings.port == resolved.llamacpp.settings.port
+    && evaluated.services.ollama.models == evaluated.nixstead.services.localai.ollama.paths.modelsDir
+    && evaluated.services.llama-cpp.port == resolved.llamacpp.settings.port
     && evaluated.services.ollama.user == "ollama"
     && lib.elem
-    evaluated.services.ollama.modelsDir
+    evaluated.services.ollama.models
     evaluated.systemd.services.ollama.unitConfig.RequiresMountsFor
     && lib.elem
     evaluated.nixstead.host.groups.media
     evaluated.systemd.services.ollama.serviceConfig.SupplementaryGroups
     && evaluated.systemd.services.llama-cpp.serviceConfig.User == "ollama"
     && evaluated.systemd.services.llama-cpp.environment.HOME == evaluated.services.ollama.home
-    && evaluated.systemd.services.llama-cpp.environment.OLLAMA_MODELS == evaluated.services.ollama.modelsDir
+    && evaluated.systemd.services.llama-cpp.environment.OLLAMA_MODELS == evaluated.services.ollama.models
     && evaluated.systemd.services.llama-cpp.serviceConfig.RuntimeDirectory == "llama-cpp"
     && lib.elem
-    "${evaluated.services.ollama.modelsDir}:/run/llama-cpp/ollama-models"
+    "${evaluated.services.ollama.models}:/run/llama-cpp/ollama-models"
     evaluated.systemd.services.llama-cpp.serviceConfig.BindReadOnlyPaths
     && lib.elem
-    evaluated.services.ollama.modelsDir
+    evaluated.services.ollama.models
     evaluated.systemd.services.llama-cpp.unitConfig.RequiresMountsFor
     && lib.elem
     evaluated.nixstead.host.groups.media

@@ -23,7 +23,7 @@ in
     nativeEnabled = c: c.services.ollama.enable;
   })
   // {
-    nativeModelPath = configured.services.ollama.modelsDir == "/srv/models/ollama";
+    nativeModelPath = configured.services.ollama.models == "/srv/models/ollama";
     waitsForModelMount = lib.elem "/srv/models/ollama" configured.systemd.services.ollama.unitConfig.RequiresMountsFor;
     loopbackListener = configured.services.ollama.host == "127.0.0.1" && configured.services.ollama.port == 21434;
     cpuDefault = configured.nixstead.host.hardware.gpu.acceleration == "none" && configured.services.ollama.package.pname == "ollama";

@@ -27,7 +27,7 @@ in {
     }
     (lib.mkIf (modelsDir != null) {
       services.ollama = {
-        inherit modelsDir;
+        models = modelsDir;
         user = lib.mkDefault "ollama";
       };
 

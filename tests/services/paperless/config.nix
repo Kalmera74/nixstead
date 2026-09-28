@@ -1,6 +1,7 @@
 {
   mkSystem,
   serviceContract,
+  lib,
   ...
 }: let
   config =
@@ -30,5 +31,10 @@ in
     separateStateCovered = config.nixstead.serviceRegistry.paperless.backup.paths == ["/srv/paperless-data" "/srv/documents" "/srv/inbox"];
     nativeDocumentPath = config.services.paperless.mediaDir == "/srv/documents";
     nativeInboxPath = config.services.paperless.consumptionDir == "/srv/inbox";
-    singleSecretOwner = config.systemd.services.paperless-web.preStart == "" && config.systemd.services.paperless-secret-key.serviceConfig.User == config.services.paperless.user;
+    singleSecretOwner =
+      config.systemd.services.paperless-web.preStart
+      == ""
+      && config.systemd.services.paperless-web.serviceConfig.User == config.services.paperless.user
+      && lib.hasInfix "/srv/paperless-data/nixos-paperless-secret-key" config.systemd.services.paperless-web.script
+      && !(config.systemd.services ? paperless-secret-key);
   }

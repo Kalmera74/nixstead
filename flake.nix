@@ -2,7 +2,8 @@
   description = "Nixstead: a registry-driven NixOS platform for self-hosted infrastructure";
 
   inputs = {
-    nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
+    nixpkgs.url = "github:NixOS/nixpkgs/nixos-26.05";
+    nixpkgs-unstable.url = "github:NixOS/nixpkgs/nixos-unstable";
     vpn-confinement.url = "github:Maroka-chan/VPN-Confinement/ce8949125b698406810ea71a8bd7b567d9a0b09f";
     sops-nix = {
       url = "github:Mic92/sops-nix";
@@ -13,6 +14,7 @@
   outputs = {
     self,
     nixpkgs,
+    nixpkgs-unstable,
     sops-nix,
     vpn-confinement,
     ...
@@ -20,6 +22,20 @@
     inherit (nixpkgs) lib;
 
     supportedSystems = ["x86_64-linux" "aarch64-linux"];
+
+    # Only modules that explicitly select pkgsUnstable use this package set.
+    # NixOS modules and the normal pkgs argument remain on stable.
+    unstablePackages = {pkgs, ...}: {
+      key = "nixstead-unstable-packages";
+      config._module.args.pkgsUnstable = import nixpkgs-unstable {
+        system = pkgs.stdenv.hostPlatform.system;
+        config = pkgs.config;
+      };
+    };
+
+    withPackages = module: {
+      imports = [unstablePackages module];
+    };
 
     secretModules = [
       sops-nix.nixosModules.sops
@@ -37,6 +53,7 @@
     withCore = module: {
       imports =
         [
+          unstablePackages
           ./modules/core/options.nix
           ./modules/services/container-runtime.nix
           ./modules/services/registry-integrations.nix
@@ -50,8 +67,8 @@
     };
 
     publicModules = {
-      default = withSecrets (withVpn ./modules/default.nix);
-      base = withSecrets ./modules/base.nix;
+      default = withPackages (withSecrets (withVpn ./modules/default.nix));
+      base = withPackages (withSecrets ./modules/base.nix);
       secrets = {
         imports = [./modules/core/options.nix] ++ secretModules;
       };
@@ -99,7 +116,7 @@
           ];
       };
 
-      program-core = ./modules/programs/core.nix;
+      program-core = withPackages ./modules/programs/core.nix;
       program-development = ./modules/programs/development.nix;
       program-hardware = ./modules/programs/hardware.nix;
       program-networking = ./modules/programs/networking.nix;

@@ -2,7 +2,7 @@
   description = "NixOS host built with the Nixstead module API";
 
   inputs = {
-    nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
+    nixpkgs.url = "github:NixOS/nixpkgs/nixos-26.05";
     nixstead = {
       url = "github:Kalmera74/nixstead";
       inputs.nixpkgs.follows = "nixpkgs";

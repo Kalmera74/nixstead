@@ -1,4 +1,8 @@
-{pkgs, ...}: {
+{
+  pkgs,
+  pkgsUnstable,
+  ...
+}: {
   environment.systemPackages = with pkgs; [
     zsh
     vim
@@ -12,7 +16,8 @@
     nvd
     ncdu
     tmux
-    herdr
+    # herdr is not packaged in NixOS 26.05.
+    pkgsUnstable.herdr
     zip
     unzip
     stow

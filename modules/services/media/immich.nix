@@ -2,6 +2,7 @@
   config,
   lib,
   pkgs,
+  pkgsUnstable,
   serviceBindAddress,
   ...
 }: let
@@ -17,6 +18,9 @@ in {
     services.immich =
       {
         enable = true;
+        # 26.05's Immich 2.x is marked insecure. Its matching machine-learning
+        # package follows through this package's passthru in the native module.
+        package = lib.mkDefault pkgsUnstable.immich;
         group = lib.mkDefault config.nixstead.host.groups.media;
         host = serviceBindAddress "immich";
         port = cfg.immich.port;

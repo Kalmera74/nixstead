@@ -353,7 +353,7 @@ in {
     }
   ] "explicitly selected quality and metadata profiles";
   seerrCanonicalState =
-    seerr.services.seerr.stateRevision
+    (seerr.services.seerr.stateRevision or 1)
     == 1
     && seerr.system.stateVersion == "24.11"
     && seerr.nixstead.serviceRegistry.seerr.backup.paths == ["/var/lib/seerr-custom"]
