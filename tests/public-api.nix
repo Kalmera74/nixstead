@@ -25,7 +25,7 @@
         ++ [
           {
             imports = [syntheticHardware];
-            # Public closure tests use the pinned unstable baseline and a new
+            # Public closure tests use the pinned stable baseline and a new
             # host state version. Existing hosts keep their historical value.
             system.stateVersion = "26.05";
             nixstead.secrets = {

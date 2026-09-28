@@ -39,7 +39,7 @@ in
       };
     mountDependencies = config.systemd.services.qbittorrent.unitConfig.RequiresMountsFor == ["/srv/downloads/complete" "/srv/downloads/incomplete"];
     runtimeCredentialDelivery = config.systemd.services.qbittorrent.serviceConfig.LoadCredential == ["username:/run/nixstead-credentials/qbittorrent/username" "password:/run/nixstead-credentials/qbittorrent/password"];
-    backupApplicationProfile = config.nixstead.serviceRegistry.qbittorrent.backup.paths == ["/var/lib/qBittorrent"];
+    backupApplicationProfile = map (lib.removeSuffix "/") config.nixstead.serviceRegistry.qbittorrent.backup.paths == ["/var/lib/qBittorrent"];
     backupFollowsNativeProfile = custom.nixstead.serviceRegistry.qbittorrent.backup.paths == ["/var/lib/qbittorrent-custom"];
     backupFollowsNativeGroup = config.nixstead.serviceRegistry.qbittorrent.backup.group == config.services.qbittorrent.group;
     storeCredentialRejected = rejects "Managed qBittorrent credentials" {nixstead.services.arr.qbittorrent.passwordFile = "/nix/store/forbidden-password";};

@@ -3,6 +3,11 @@
 Program modules install optional command-line tools independently from service
 presets. Hosts import only the groups they want.
 
+Packages use the stable NixOS 26.05 input. The core group explicitly selects
+`herdr` from the separate locked unstable input because stable does not include
+it. The public core export supplies that package set automatically; repository
+hosts receive it through the shared default module.
+
 | Module | Purpose |
 | --- | --- |
 | `core.nix` | Editors, Git, search, archive, terminal, and inspection tools |

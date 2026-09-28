@@ -115,7 +115,12 @@ in {
       after = requiredMountUnits;
       wantedBy = lib.mkForce [];
       before = lib.mkForce [];
-      environment.TMPDIR = "/run/backup-vaultwarden";
+      environment = {
+        # Stable's native backup does not resolve config.DATA_FOLDER aliases.
+        # Snapshot the same effective directory as the running server.
+        DATA_FOLDER = lib.mkForce dataFolder;
+        TMPDIR = "/run/backup-vaultwarden";
+      };
       serviceConfig = {
         User = cfg.backup.user;
         Group = cfg.backup.group;

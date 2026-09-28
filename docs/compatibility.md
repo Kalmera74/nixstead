@@ -6,12 +6,20 @@ before relying on a backup policy.
 
 ## Tested baseline and architectures
 
-The supported evaluation baseline is the exact `nixos-unstable` input recorded
-in `flake.lock`, together with its locked sops-nix and VPN inputs and registry
-container digests. CI evaluates public modules on `x86_64-linux` and
-`aarch64-linux`. Runtime jobs target `x86_64-linux` only. ARM runtime, stable
-Nixpkgs overrides, alternate database versions, package overrides and arbitrary
-container replacements are unverified combinations.
+The evaluation baseline is the exact `nixos-26.05` input recorded in
+`flake.lock`, together with its locked sops-nix and VPN inputs and registry
+container digests. NixOS modules and ordinary packages come from stable.
+The separate `nixpkgs-unstable` input supplies only explicitly selected packages:
+`herdr` in the core program group (absent from 26.05), and Immich with its matching
+machine-learning package (26.05's Immich 2.x is marked insecure).
+Updating that input does not update NixOS module definitions.
+
+CI evaluates public modules on `x86_64-linux` and `aarch64-linux`. Runtime jobs
+target `x86_64-linux` only. Existing runtime and recovery results predate the
+switch to stable unless a result explicitly records the stable revision; they
+do not establish runtime or downgrade compatibility for the new baseline.
+ARM runtime, other Nixpkgs input overrides, alternate database versions, package
+overrides and arbitrary container replacements remain unverified combinations.
 
 Record the repository and Nixpkgs revisions with verification results.
 Evaluation, boot, API integration, and populated restore are separate levels.

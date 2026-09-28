@@ -68,6 +68,8 @@ class SetupRendererTests(unittest.TestCase):
         self.assertIn("nixstead.nixosModules.default", rendered)
         self.assertIn("nixstead.nixosModules.program-core", rendered)
         self.assertIn("nixstead.nixosModules.program-zsh", rendered)
+        self.assertIn('nixpkgs.url = "github:NixOS/nixpkgs/nixos-26.05";', rendered)
+        self.assertNotIn("nixos-unstable", rendered)
         self.assertNotIn("../../modules", rendered)
         subprocess.run(
             ["nix-instantiate", "--parse", "--expr", rendered],

@@ -23,23 +23,28 @@
       host = serviceBindAddress "llamacpp";
       port = cfg.port;
     };
-  llamaCppCommandLine = toString (lib.cli.toCommandLine (optionName: {
+  llamaCppExtraFlags =
+    lib.cli.toCommandLine (optionName: {
       option =
         if builtins.stringLength optionName > 1
         then "--${optionName}"
         else "-${optionName}";
-      sep = " ";
+      sep = null;
       explicitBool = false;
       formatArg = lib.generators.mkValueStringDefault {};
     })
-    config.services.llama-cpp.settings);
+    (builtins.removeAttrs llamaCppSettings ["host" "port"]);
+  llamaCppCommandLine = lib.escapeShellArgs (
+    ["--host" config.services.llama-cpp.host "--port" (toString config.services.llama-cpp.port)]
+    ++ config.services.llama-cpp.extraFlags
+  );
   ollamaExecutable = lib.getExe config.services.ollama.package;
   llamaServerExecutable = lib.getExe' config.services.llama-cpp.package "llama-server";
   ollamaModelsMount = "/run/llama-cpp/ollama-models";
   ollamaModelLauncher = pkgs.writeShellScript "llama-cpp-from-ollama" ''
     set -euo pipefail
 
-    ollama_models_dir=${lib.escapeShellArg config.services.ollama.modelsDir}
+    ollama_models_dir=${lib.escapeShellArg config.services.ollama.models}
     ollama_models_mount=${lib.escapeShellArg ollamaModelsMount}
     modelfile=""
     for attempt in {1..30}; do
@@ -104,7 +109,8 @@ in {
       services.llama-cpp = {
         enable = true;
         package = lib.mkDefault llamaCppPackage;
-        settings = llamaCppSettings;
+        inherit (llamaCppSettings) host port;
+        extraFlags = llamaCppExtraFlags;
       };
     })
     (lib.mkIf (cfg.enable && ollamaBacked) {
@@ -113,16 +119,16 @@ in {
       systemd.services.llama-cpp = {
         requires = ["ollama.service"];
         after = ["ollama.service"];
-        unitConfig.RequiresMountsFor = lib.optional (configuredOllamaModelsDir != null) config.services.ollama.modelsDir;
+        unitConfig.RequiresMountsFor = lib.optional (configuredOllamaModelsDir != null) config.services.ollama.models;
         environment = {
           HOME = config.services.ollama.home;
-          OLLAMA_MODELS = config.services.ollama.modelsDir;
+          OLLAMA_MODELS = config.services.ollama.models;
         };
         serviceConfig = {
           User = config.services.ollama.user;
           Group = config.services.ollama.group;
           RuntimeDirectory = "llama-cpp";
-          BindReadOnlyPaths = ["${config.services.ollama.modelsDir}:${ollamaModelsMount}"];
+          BindReadOnlyPaths = ["${config.services.ollama.models}:${ollamaModelsMount}"];
           SupplementaryGroups = lib.optional (configuredOllamaModelsDir != null) config.nixstead.host.groups.media;
           ExecStart = lib.mkForce ollamaModelLauncher;
         };

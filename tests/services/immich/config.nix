@@ -24,7 +24,8 @@
     };
     users.groups.photo-owner = {};
   };
-  config = (mkSystem [selected]).config;
+  evaluated = mkSystem [selected];
+  config = evaluated.config;
   public = (mkSystem [selected {nixstead.host.network.exposure.services.immich = "public";}]).config;
   rejects = message: override: lib.any (a: !a.assertion && lib.hasInfix message a.message) (mkSystem [selected override]).config.assertions;
 in
@@ -35,6 +36,8 @@ in
     nativeEnabled = c: c.services.immich.enable;
   })
   // {
+    securePackageSource = config.services.immich.package == evaluated._module.args.pkgsUnstable.immich;
+    matchingMachineLearning = config.services.immich.package.machine-learning == evaluated._module.args.pkgsUnstable.immich.machine-learning;
     nativePort = config.services.immich.port == 28208;
     nativeLoopback = config.services.immich.host == "127.0.0.1";
     publicListener = public.services.immich.host == "0.0.0.0";

@@ -12,6 +12,13 @@
     nixstead.services.media.seerr.paths.configDir = "/var/lib/seerr-custom";
   };
   config = (mkSystem [selected]).config;
+  olderHost =
+    (mkSystem [
+      {
+        system.stateVersion = lib.mkForce "24.11";
+        nixstead.services.media.seerr.enable = true;
+      }
+    ]).config;
   public = (mkSystem [selected {nixstead.host.network.exposure.services.seerr = "public";}]).config;
   rejects = message: override: lib.any (a: !a.assertion && lib.hasInfix message a.message) (mkSystem [selected override]).config.assertions;
 in
@@ -25,7 +32,8 @@ in
     nativePort = config.services.seerr.port == 28202;
     nativeLoopback = config.systemd.services.seerr.environment.HOST == "127.0.0.1";
     publicListener = public.systemd.services.seerr.environment.HOST == "0.0.0.0";
-    canonicalStateRevision = config.services.seerr.stateRevision == 1;
+    canonicalStateRevision = (config.services.seerr.stateRevision or 1) == 1;
+    olderHostKeepsCanonicalState = olderHost.system.stateVersion == "24.11" && olderHost.services.seerr.configDir == "/var/lib/seerr" && olderHost.systemd.services.seerr.serviceConfig.StateDirectory == "seerr";
     nativeState = config.services.seerr.configDir == "/var/lib/seerr-custom" && config.systemd.services.seerr.serviceConfig.StateDirectory == "seerr-custom";
     privateState = config.systemd.services.seerr.serviceConfig.StateDirectoryMode == "0700" && config.nixstead.serviceRegistry.seerr.backup.dynamicUser;
     checkpointFollowsNativeState = lib.hasInfix "/var/lib/seerr-custom/db/db.sqlite3" config.systemd.services.seerr.postStop && lib.hasInfix "wal_checkpoint(TRUNCATE)" config.systemd.services.seerr.postStop;

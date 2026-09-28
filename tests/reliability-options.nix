@@ -92,8 +92,9 @@ in {
   paperlessUsesOnlyNativeSecretGenerator =
     separateState.systemd.services.paperless-web.preStart
     == ""
-    && separateState.systemd.services.paperless-web.serviceConfig.EnvironmentFile == ["/srv/paperless/nixos-paperless-secret-key.env"]
-    && builtins.hasAttr "paperless-secret-key" separateState.systemd.services;
+    && lib.hasInfix "/srv/paperless/nixos-paperless-secret-key" separateState.systemd.services.paperless-web.script
+    && lib.hasInfix "export PAPERLESS_SECRET_KEY" separateState.systemd.services.paperless-web.script
+    && !(builtins.hasAttr "paperless-secret-key" separateState.systemd.services);
   forgejoDoesNotImposeMigrationTimeouts =
     !((separateState.services.forgejo.settings."git.timeout" or {}) ? MIGRATE)
     && !(registry.forgejo.proxy ? extraLocationConfig)

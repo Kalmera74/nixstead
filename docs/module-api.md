@@ -21,11 +21,16 @@ The optional program groups are exported as `nixosModules.program-core`,
 `program-backup`, `program-zsh`, and `program-yazi`. Import them alongside
 `nixosModules.default`; the standalone wizard does this automatically.
 
-CI tests the exact `nixos-unstable` revision in `flake.lock`. Stable Nixpkgs
-input overrides are **unverified** and may lack options/packages required by the
-modules; they are not a supported production baseline. Keep a consumer's
-`inputs.nixstead.inputs.nixpkgs.follows` aligned with its selected input and run
-all relevant checks for any override. See [compatibility notes](compatibility.md).
+The default baseline is the exact `nixos-26.05` revision in `flake.lock`.
+The core program module selects `herdr` from Nixstead's separately locked
+`nixpkgs-unstable` input. The media module also selects Immich and its matching
+machine-learning package from that input because stable's Immich is marked
+insecure. NixOS modules and other packages remain on stable.
+Consumers do not need to wire a second package set into the module arguments.
+Keep `inputs.nixstead.inputs.nixpkgs.follows` aligned with the consumer's stable
+input and run all relevant checks for any override. See the
+[compatibility notes](compatibility.md), including the limits of earlier runtime
+results after changing the baseline.
 
 `default` and `base` enable NetworkManager, SSH and its firewall port, apply the
 configured locale/timezone (defaults: `en_US.UTF-8`, UTC, US console keymap), and
@@ -74,7 +79,7 @@ surface. Most users should import `default` and enable only desired services.
   description = "My NixOS homelab";
 
   inputs = {
-    nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
+    nixpkgs.url = "github:NixOS/nixpkgs/nixos-26.05";
     nixstead = {
       url = "github:Kalmera74/nixstead";
       inputs.nixpkgs.follows = "nixpkgs";

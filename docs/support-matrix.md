@@ -6,6 +6,13 @@ representative configurations on x86_64-linux. The manual heavy workflow checks
 the full public module API on x86_64-linux and aarch64-linux. Runtime groups
 currently run on x86_64-linux; ARM runtime behavior is not claimed.
 
+The flake now uses NixOS 26.05 for its system and service packages, with
+explicit unstable exceptions for `herdr` and Immich (including machine learning).
+Recorded runtime and recovery results below predate this channel change unless
+they explicitly name the stable revision. Evaluation on stable does not
+revalidate those runtime results or prove that existing application databases
+can be downgraded.
+
 The [service coverage catalogue](generated/test-coverage.md) lists every registry
 entry and its independently runnable checks. All 66 entries now have dedicated
 configuration suites; runtime and recovery coverage remains partial. A declared

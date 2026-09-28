@@ -1,6 +1,7 @@
 {
   config,
   lib,
+  options,
   pkgs,
   serviceBindAddress,
   ...
@@ -110,12 +111,17 @@ in {
     sops.secrets.${jellyfinSecret} = lib.mkIf (jellyfinSelected && jellyfin.apiKeyFile == null) {
       restartUnits = ["nixstead-arr-reconcile.service"];
     };
-    services.seerr = {
-      enable = true;
-      port = cfg.seerr.port;
-      stateRevision = 1;
-      configDir = lib.mkDefault cfg.seerr.paths.configDir;
-    };
+    services.seerr =
+      {
+        enable = true;
+        port = cfg.seerr.port;
+        configDir = lib.mkDefault cfg.seerr.paths.configDir;
+      }
+      # Stable predates this option. Explicit configDir and StateDirectory
+      # below preserve revision 1's layout even on older host stateVersions.
+      // lib.optionalAttrs (options.services.seerr ? stateRevision) {
+        stateRevision = 1;
+      };
     assertions = [
       {
         assertion = !cfg.seerr.integrations.enable || !(cfg.seerr.integrations.jellyfin.enable || lib.any (destination: destination.enable) (lib.attrValues cfg.seerr.integrations.destinations)) || (config.nixstead.services.arr.credentials.enable or false);
