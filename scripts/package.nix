@@ -4,6 +4,8 @@
   repositoryRoot ? null,
   configurationName ? null,
 }: let
+  # Interpolate runtime paths below so Nix copies them into the package closure;
+  # toString alone leaves references to the evaluation checkout.
   scriptRoot = ./.;
   cliScript = ./nixstead.sh;
   generateCredentialsScript = ./generate-credential-files.sh;
@@ -140,13 +142,13 @@
         ${lib.optionalString (name == "service-credentials") ''
           export NIXSTEAD_CREDENTIAL_STORE=${../modules/services/arr}/credential_store.py
         ''}
-        export NIXSTEAD_GENERATE_CREDENTIALS_SCRIPT=${lib.escapeShellArg (toString generateCredentialsScript)}
+        export NIXSTEAD_GENERATE_CREDENTIALS_SCRIPT=${lib.escapeShellArg "${generateCredentialsScript}"}
         export NIXSTEAD_DATABASE_LIB=${./lib/service-databases.sh}
         export NIXSTEAD_ELASTICSEARCH_SNAPSHOT=${./lib/elasticsearch-snapshot.py}
         export NIXSTEAD_STATE_FILE_VALIDATOR=${./lib/validate-state-file.py}
         export NIXSTEAD_MONGODB_DIRECTORY_VALIDATOR=${./lib/validate-mongodb-directory.py}
-        export NIXSTEAD_LIB=${lib.escapeShellArg (toString nixsteadLib)}
-        export NIXSTEAD_SECRET_SCHEMA=${lib.escapeShellArg (toString secretSchema)}
+        export NIXSTEAD_LIB=${lib.escapeShellArg "${nixsteadLib}"}
+        export NIXSTEAD_SECRET_SCHEMA=${lib.escapeShellArg "${secretSchema}"}
         ${configuredEnvironment}
         if [[ -z "''${NIXSTEAD_REPOSITORY_ROOT:-}" && -f "$PWD/flake.nix" ]]; then
           export NIXSTEAD_REPOSITORY_ROOT="$PWD"
@@ -182,16 +184,16 @@
         if [[ -z "''${NIXSTEAD_SECRETS_DIR:-}" && -n "''${NIXCONFIG_SECRETS_DIR:-}" ]]; then
           export NIXSTEAD_SECRETS_DIR="$NIXCONFIG_SECRETS_DIR"
         fi
-        export NIXSTEAD_SCRIPT_ROOT=${lib.escapeShellArg (toString scriptRoot)}
+        export NIXSTEAD_SCRIPT_ROOT=${lib.escapeShellArg "${scriptRoot}"}
         export NIXSTEAD_MEDIA_ENABLED=${lib.boolToString includeMedia}
         export NIXSTEAD_CREDENTIAL_STORE=${../modules/services/arr}/credential_store.py
-        export NIXSTEAD_GENERATE_CREDENTIALS_SCRIPT=${lib.escapeShellArg (toString generateCredentialsScript)}
+        export NIXSTEAD_GENERATE_CREDENTIALS_SCRIPT=${lib.escapeShellArg "${generateCredentialsScript}"}
         export NIXSTEAD_DATABASE_LIB=${./lib/service-databases.sh}
         export NIXSTEAD_ELASTICSEARCH_SNAPSHOT=${./lib/elasticsearch-snapshot.py}
         export NIXSTEAD_STATE_FILE_VALIDATOR=${./lib/validate-state-file.py}
         export NIXSTEAD_MONGODB_DIRECTORY_VALIDATOR=${./lib/validate-mongodb-directory.py}
-        export NIXSTEAD_LIB=${lib.escapeShellArg (toString nixsteadLib)}
-        export NIXSTEAD_SECRET_SCHEMA=${lib.escapeShellArg (toString secretSchema)}
+        export NIXSTEAD_LIB=${lib.escapeShellArg "${nixsteadLib}"}
+        export NIXSTEAD_SECRET_SCHEMA=${lib.escapeShellArg "${secretSchema}"}
         export NIXSTEAD_SETUP_PROGRAM=${lib.escapeShellArg "${setupProgram}/bin/nixstead-setup"}
         ${lib.optionalString (repositoryRoot != null) ''
           if [[ -z "''${NIXSTEAD_REPOSITORY_ROOT:-}" ]]; then
