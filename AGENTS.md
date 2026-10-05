@@ -15,6 +15,19 @@ Guidance for coding agents working in this repository.
   the user gives explicit permission in the current request. Read-only checks
   such as evaluation and flake checks are allowed when relevant.
 
+## Change Scope and Machine Independence
+
+- Keep each service's code, comments, and documentation independent of unrelated
+  services. Do not add or alter them to explain or accommodate another service's
+  issue or fix. Shared behavior belongs in its owning module and documentation.
+- Keep reusable code and documentation machine-agnostic. Do not add comments,
+  documentation, defaults, workarounds, or behavioral changes based on a fix
+  specific to this machine or a one-time situation.
+- Keep host-specific settings and fixes in the affected host or consumer
+  configuration. Keep one-time troubleshooting details in the conversation;
+  do not turn them into permanent repository code, comments, or documentation.
+- Do not expand a task into changes to unrelated services, code, or documentation.
+
 ## Repo Layout
 
 - Flake entrypoints:
