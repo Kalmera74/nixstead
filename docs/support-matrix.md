@@ -14,7 +14,7 @@ revalidate those runtime results or prove that existing application databases
 can be downgraded.
 
 The [service coverage catalogue](generated/test-coverage.md) lists every registry
-entry and its independently runnable checks. All 66 entries now have dedicated
+entry and its independently runnable checks. All 67 entries now have dedicated
 configuration suites; runtime and recovery coverage remains partial. A declared
 scenario is not a recorded pass or a full-support
 claim. The maintained baseline now favors quick native startup/readiness checks
@@ -32,11 +32,11 @@ does not run a second runtime VM for the same stateful profile.
 
 | Group | Passing current evidence | Boundary |
 | --- | --- | --- |
-| Configuration | All 66 dedicated service reports on x86_64-linux and aarch64-linux | Native module construction and applicable enable/disable, option, listener, exposure, proxy/card, credential and backup wiring; no ARM runtime claim |
+| Configuration | All 67 dedicated service reports on x86_64-linux and aarch64-linux, including Radicale configuration evaluation on NixOS 26.05 | Native module construction and applicable enable/disable, option, listener, exposure, proxy/card, credential and backup wiring; no ARM runtime claim |
 | ARR | One shared combined check for ARR reconciliation state, Sonarr, Radarr, Lidarr, Readarr, Bazarr, Prowlarr, qBittorrent, SABnzbd and Shelfmark; the same fixture establishes Swaparr startup | No media acquisition, queue/library or source-byte recovery workflow |
 | Media | Combined checks for Jellyfin, Seerr, Tdarr, Komga, Kavita, Audiobookshelf, Immich, RomM and TubeArchivist; runtime-only Kiwix and shared Tdarr-node startup | Application readiness and owned state only; source media and libraries retain separate owners |
 | Development | Combined checks for PostgreSQL, MongoDB, Redis, RabbitMQ, Grafana, Forgejo, Gitea, pgAdmin, SeaweedFS, Uptime Kuma and ntfy; runtime-only Prometheus and Loki | Prometheus/Loki local history is disposable in the current policy |
-| Productivity | Combined checks for Paperless, Nextcloud, n8n, Seafile, Wallabag, Linkwarden, Mealie, Actual Budget default/custom storage, Miniflux and SearXNG; runtime-only Stirling PDF | No business workflows or external provider compatibility |
+| Productivity | Combined checks for Paperless, Nextcloud, n8n, Seafile, Wallabag, Linkwarden, Mealie, Actual Budget default/custom storage, Miniflux, SearXNG and Radicale; runtime-only Stirling PDF | No business workflows or external provider compatibility |
 | Standalone and local AI | Combined checks for Vaultwarden, Home Assistant, Authentik, Syncthing, Scrutiny and Open WebUI; runtime-only Ollama and llama.cpp | Synced/source files and unique model inputs keep their documented external ownership boundaries |
 | Platform and external adapters | Runtime-only Homepage/TrueNAS, nginx, Tailscale, WireGuard, CIFS, NAS, Samba, Pi-hole and Proxmox checks | Bounded local peers only; no appliance, enrolled-identity, local-CA, Samba-account or aggregate storage recovery claim |
 
@@ -57,6 +57,7 @@ The service guides describe the selected state and ownership boundaries.
 
 | Profile | Configuration | Executed result | Scope and limits |
 | --- | --- | --- | --- |
+| Radicale startup and state restore | `service-radicale-config` evaluated on x86_64-linux and aarch64-linux with NixOS 26.05 | `service-radicale-recovery` passed in 62.72s on x86_64-linux on 2026-10-04, using native Radicale 3.7.4 | Generated bcrypt credentials authenticate DAV discovery while anonymous access is denied; one encrypted Borg backup and clean restore recovers custom storage, a file marker and both credential files. Calendar/contact synchronization, external clients, HTTPS discovery, runtime SOPS overrides/rotation, ARM runtime and upgrades remain unverified |
 | Shared WireGuard startup | `service-wireguard-config` on both architectures; public standalone module and source/namespace validation | `service-wireguard-runtime` smoke passed in 32.04s on x86_64-linux | Disposable local peers, a native host tunnel and an attached namespace service start, and their configured routes and DNS reach the peer. Key rotation, tunnel loss, restart/reboot, commercial-provider compatibility, VPN-server policy, runtime-state archives and ARM execution remain unverified |
 | MongoDB startup and WiredTiger restore | `service-mongodb-config` on both architectures, including effective native port/path | Recovery smoke passed in 226.36s on x86_64-linux | Native MongoDB starts with a runtime-generated root credential and stores one exact marker document; one encrypted stopped-WiredTiger backup and clean Borg restore recovers the erased directory, readiness and marker. Account/role workflows, credential rotation, failure matrices, replica sets, sharding, ARM runtime and upgrades remain unverified |
 | nginx proxy startup | `service-nginx-config` on both architectures | Runtime smoke passed in 38.62s on x86_64-linux | Native nginx, its generated local CA and a registry proxy start; an independent client reaches the proxy over trusted HTTPS while direct access to the loopback backend fails. CA archive recovery, rotation/retrust, repeated lifecycle, upstream failures, WebSockets, external CAs and ARM runtime remain unverified |

@@ -46,6 +46,7 @@ Generated from `lib.testCatalogue`; edit suite descriptors and test metadata, th
 | [qBittorrent](#qbittorrent) | scenario | scenario | missing | scenario | missing | missing |
 | [RabbitMQ](#rabbitmq) | scenario | scenario | missing | scenario | missing | missing |
 | [Radarr](#radarr) | scenario | scenario | missing | scenario | missing | missing |
+| [Radicale](#radicale) | scenario | scenario | missing | scenario | missing | missing |
 | [Readarr](#readarr) | scenario | scenario | missing | scenario | missing | missing |
 | [Redis](#redis) | scenario | scenario | missing | scenario | missing | missing |
 | [RomM](#romm) | scenario | scenario | missing | scenario | missing | missing |
@@ -597,6 +598,19 @@ Suite: [tests/services/radarr/default.nix](../../tests/services/radarr/default.n
 - `service-radarr-recovery`: One shared shipped Borg backup and erased-state restore of selected ARR metadata roots and the reconciliation journal; final readiness and independent test-owned file markers check archive wiring.
 
 Limitations: The combined x86_64 startup/recovery smoke passed. Application business workflows, media acquisition/import, existing queues/libraries, repeated lifecycle, incomplete-input failure matrices and cross-version upgrades are outside this startup/backup fixture. Source/download bytes have separate owners. Runtime/recovery target x86_64; ARM has configuration evaluation only. The existing /var/lib/radarr archive layout is preserved; custom native dataDir recovery is unverified. No test changes between pinned application revisions.
+
+<a id="radicale"></a>
+## Radicale
+
+Support: limited. State: stateful.
+
+Suite: [tests/services/radicale/default.nix](../../tests/services/radicale/default.nix).
+
+- `public-module-api`: Shared registry/public API assertions; does not establish every isolated service contract.
+- `service-radicale-config`: Independent enable/disable, parent and full preset selection, custom listener/storage, exposure, proxy/card wiring, DAV discovery, bcrypt authentication, runtime credential override and backup selection.
+- `service-radicale-recovery`: Native startup with generated credentials, authenticated DAV discovery and anonymous denial, followed by one encrypted Borg backup and clean restore of custom storage, a file marker and credential continuity.
+
+Limitations: The recovery fixture covers native startup, authentication and owned files only. Calendar/contact synchronization, external clients, HTTPS discovery, runtime SOPS overrides, credential rotation, ARM runtime and cross-version upgrades remain unverified. No test changes between pinned application revisions.
 
 <a id="readarr"></a>
 ## Readarr

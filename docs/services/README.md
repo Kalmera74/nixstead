@@ -95,6 +95,7 @@ Shared contracts: [media operations](../media-operations.md),
 - [Actual Budget](actual-budget.md)
 - [Miniflux](miniflux.md)
 - [SearXNG](searxng.md)
+- [Radicale](radicale.md)
 
 ## Standalone and platform
 

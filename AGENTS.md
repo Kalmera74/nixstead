@@ -82,7 +82,7 @@ Guidance for coding agents working in this repository.
   - Defaults are set in `modules/services/localai/localai.nix`
 - Productivity stack:
   - Parent option: `nixstead.services.productivity.enable`
-  - Child toggles: `paperless`, `nextcloud`, `n8n`, `stirlingpdf`, `seafile`, `wallabag`, `linkwarden`, `snapotter`
+  - Child toggles: `paperless`, `nextcloud`, `n8n`, `stirlingpdf`, `seafile`, `wallabag`, `linkwarden`, `snapotter`, `radicale`
   - Defaults are set in `modules/services/productivity/productivity.nix`
 - Standalone services:
   - Vaultwarden uses `nixstead.services.vaultwarden` in `modules/services/vaultwarden.nix`.

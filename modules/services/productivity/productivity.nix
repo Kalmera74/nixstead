@@ -101,6 +101,11 @@ in {
         description = "Directory containing SearXNG runtime-generated secrets.";
       };
     };
+    radicale = serviceOptionFromRegistry "radicale" {
+      enable = cfg.enable;
+      pathOptions.dataDir = runtimePathOption "/var/lib/radicale" "Absolute directory containing Radicale collections and generated credentials.";
+      extraOptions.usersFile = optionalRuntimePathOption "Optional absolute bcrypt htpasswd file, such as a sops-nix secret path; an admin account is generated when unset.";
+    };
   };
 
   imports = [
@@ -116,5 +121,6 @@ in {
     ./actual-budget.nix
     ./miniflux.nix
     ./searxng.nix
+    ./radicale.nix
   ];
 }
