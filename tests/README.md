@@ -1,6 +1,6 @@
 # Service suites
 
-Each suite is a small collection of independently runnable flake checks. All 66
+Each suite is a small collection of independently runnable flake checks. All 67
 registry entries have dedicated configuration suites. The
 [generated coverage catalogue](../docs/generated/test-coverage.md) includes every
 registry service, shared evidence and explicit gaps. It describes test intent;
@@ -145,7 +145,7 @@ VM derivation. Full API/configuration, credential and runtime checks run in the
 manually dispatched heavy workflow, which also repeats the shared Python and
 documentation checks. Manual dispatch can run all
 runtime checks, the canaries or one registry service. The heavy workflow packs
-the 53 unique executions into at most 8 weighted runner jobs; checks run
+the 54 unique executions into at most 8 weighted runner jobs; checks run
 sequentially inside each runner and reuse its Nix store. Checks backed by the
 same fixture file share an execution key and run only once. Selection respects
 each check's declared architecture. The full run exposes existing gaps; it

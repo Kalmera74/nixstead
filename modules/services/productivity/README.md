@@ -1,7 +1,7 @@
 # Productivity stack
 
 This directory contains Paperless-ngx, Nextcloud, n8n, Stirling PDF, Seafile,
-Wallabag, Linkwarden, SnapOtter, Mealie, Actual Budget, Miniflux, and SearXNG.
+Wallabag, Linkwarden, SnapOtter, Mealie, Actual Budget, Miniflux, SearXNG, and Radicale.
 
 ```nix
 nixstead.services.productivity = {

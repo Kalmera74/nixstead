@@ -495,4 +495,51 @@
       // {requiredFiles = ["environment"];};
     setup = setup "productivity" 504 ["full"];
   };
+
+  radicale = mkService {
+    name = "Radicale";
+    optionPath = ["productivity" "radicale"];
+    defaults = {
+      subdomain = "radicale";
+      port = 5232;
+    };
+    firewall = true;
+    proxy =
+      localProxy
+      // {
+        extraVhostConfig = ''
+          client_max_body_size 100m;
+          location = /.well-known/caldav { return 301 /; }
+          location = /.well-known/carddav { return 301 /; }
+        '';
+        extraLocationConfig = ''
+          proxy_set_header X-Script-Name "";
+          proxy_set_header X-Forwarded-Host $host;
+        '';
+      };
+    homepage = card "Productivity" 130 "Radicale" "radicale" "Calendars & Contacts";
+    health = health "radicale.service";
+    credentials = [
+      (credential.manual "When usersFile is unset, log in as admin and read admin-password from paths.dataDir (default: sudo cat /var/lib/radicale/admin-password). Otherwise use the accounts in the configured bcrypt htpasswd file; see docs/services/radicale.md.")
+    ];
+    backup =
+      (backup "radicale" "radicale.service" "radicale" "radicale")
+      // {
+        ownerOption = ["services" "radicale" "user"];
+        groupOption = ["services" "radicale" "group"];
+        extraNativePathOptions = [["services" "radicale" "settings" "storage" "filesystem_folder"]];
+        requiredFilesWhenNull = [
+          {
+            option = ["usersFile"];
+            files = ["users" "admin-password"];
+          }
+        ];
+      };
+    setup =
+      (setup "productivity" 505 ["full"])
+      // {
+        support = "NixOS 26.05 x86_64 startup, authenticated DAV discovery and clean Borg restore smoke passed";
+        requirements = "Persistent calendar/contact collections; generated admin login or runtime bcrypt htpasswd file; HTTPS for remote clients";
+      };
+  };
 }

@@ -69,6 +69,7 @@ membership.
 | `qbittorrent` | qBittorrent | `bit.home.arpa` | 8080 | media-starter, media-server, full |
 | `rabbitmq` | RabbitMQ | `rabbitmq.home.arpa` | 5672 | development, full |
 | `radarr` | Radarr | `radarr.home.arpa` | 7878 | media-starter, media-server, full |
+| `radicale` | Radicale | `radicale.home.arpa` | 5232 | full |
 | `readarr` | Readarr (retired) | `readarr.home.arpa` | 8787 | — |
 | `redis` | Redis | `redis.home.arpa` | 6379 | development, full |
 | `romm` | RomM | `romm.home.arpa` | 8182 | media-server, full |
